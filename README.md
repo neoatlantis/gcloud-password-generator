@@ -9,9 +9,9 @@ master password is accidentally released. I realize that my passwords need
 another piece of entropy, which may not come alone with the files or database
 storing it.
 
-We define our password as results of key derivating functions:
+We define our passwords as results of a key derivating function, like HMAC-SHA512:
 
-    `password = password(usage) = KDF(secret(usage), some_salt_or_nonce)`
+    password = password(usage) = KDF(secret(usage), some_salt_or_nonce)
 
 where
 
