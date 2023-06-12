@@ -7,9 +7,9 @@ const TEMPLATE = `
     <meta charset="utf-8" />
 </head><body>
 
-    <form action="/" method="POST">
+    <form method="POST">
         <div>Request: <input type="text" name="request" /></div>
-        <div>PIN: <input type="password" name="pin" /></div>
+        <!--<div>PIN: <input type="password" name="pin" /></div>-->
         <div>OTP: <input type="password" name="otp" /></div>
         <button type="submit">Submit</button>
     </form>

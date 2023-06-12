@@ -74,8 +74,3 @@ module.exports = async (otp)=>{
     };
 }
 
-(async ()=>{
-    console.log(
-        await module.exports("cccccbhkflbrjiintdickbvhjfvgnudflkjnnhvldfbj")
-    );
-})();
