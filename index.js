@@ -51,7 +51,8 @@ exports.generatePassword = async (req, res)=>{
     
     let otp_verification = await verify_yubico_otp(body_otp);
     if(_.get(otp_verification, "success") !== true){
-        res.status(400).send("Bad OTP");
+        res.status(400).send("Bad OTP.");
+        return;
     }
 
     const result_buffer = await getPassword(Buffer.from(body_request, "ascii"));

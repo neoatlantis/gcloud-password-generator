@@ -1,5 +1,12 @@
 const crypto = require("crypto");
+const _ = require("lodash");
 
+const ALLOWED_USERS = _.compact(
+    _.get(process, "env.ALLOWED_USERS", ",")
+    .split(",")
+);
+
+console.log("Only allowing key holders of:", ALLOWED_USERS);
 
 
 
@@ -58,8 +65,6 @@ module.exports = async (otp)=>{
     
     const res = await fetch(endpoint);
     const result = await res.text();
-
-    console.log(result);
     
     if(!(
         result.indexOf(`otp=${otp}`) >= 0 &&
@@ -68,9 +73,12 @@ module.exports = async (otp)=>{
         return false;
     }
 
+    const sn = yubikey_otp_to_serial(otp).toString();
+
     return {
-        success: result.indexOf("status=OK") >= 0,
+        success: result.indexOf("status=OK") >= 0 && ALLOWED_USERS.indexOf(sn)>=0,
         serial: yubikey_otp_to_serial(otp),
+        allowed: ALLOWED_USERS.indexOf(sn)>=0,
     };
 }
 
