@@ -16,7 +16,16 @@ const TEMPLATE = `
 </body></html>
 `;
 
-const config = JSON.parse(require("fs").readFileSync("./config.json"));
+
+const IS_DEV = (_.get(process.env, "DEV") != null);
+if(IS_DEV) console.log("Running in development mode.");
+
+
+
+const config = IS_DEV ? 
+    JSON.parse(require("fs").readFileSync("./config.json")) :
+    null
+;
 
 const getPassword = require("./get_password")(config);
 

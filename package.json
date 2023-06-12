@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx functions-framework --target=generatePassword --signature-type=http"
+    "start": "DEV=1 npx functions-framework --target=generatePassword --signature-type=http"
   },
   "author": "NeoAtlantis",
   "license": "GPL-2.0",
