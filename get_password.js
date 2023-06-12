@@ -1,29 +1,46 @@
 const _ = require("lodash");
 const kms = require('@google-cloud/kms');
 
-module.exports = (config)=>{
+module.exports = async (config)=>{
 
-    const projectId = _.get(
+    const projectId  = _.get(
         config, "service_account.project_id", "neoatlantis-password-manager");
     const locationId = 'global';
+    const keyringId  = _.get(config, "kms.keyring_id", "root");
+    const keyId      = _.get(config, "kms.key_id", "password_seed");
 
     // Instantiates an authorized client
-    const client = new kms.KeyManagementServiceClient({
-        credentials: _.get(config, "service_account"),
+    const client = (()=>{
+        if(config){
+            return new kms.KeyManagementServiceClient({
+                credentials: _.get(config, "service_account"),
+            });
+        } else {
+            return new kms.KeyManagementServiceClient();
+        }
+    })();
+
+    const keyVersions = await client.listCryptoKeyVersionsAsync({
+        parent: `projects/${projectId}/locations/${locationId}/keyRings/${keyringId}/cryptoKeys/${keyId}`,
     });
 
-    const versionName = client.cryptoKeyVersionPath(
-        projectId,
-        locationId,
-        _.get(config, "kms.keyring_id", "root"),
-        _.get(config, "kms.key_id", "password_seed"),
-        _.get(config, "kms.version_id")
-    );
+    let newestCreateTime = -1;
+    let newestVersionName = "";
 
-    
+    for await (let keyVersion of keyVersions){
+        let ctime = parseInt(_.get(keyVersion, "createTime.seconds"));
+        if(_.isFinite(ctime) && ctime >= 0){
+            if(ctime > newestCreateTime){
+                newestCreateTime = ctime;
+                newestVersionName = keyVersion.name;
+            }
+        }
+    }
+
+
     return async function sign(data){
         const [signResponse] = await client.macSign({
-            name: versionName,
+            name: newestVersionName,
             data
         });
         return signResponse.mac;

@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const verify_yubico_otp = require("./verify_yubico_otp");
 const TEMPLATE = `
 <!DOCTYPE html>
 <html><head>
@@ -27,13 +28,17 @@ const config = IS_DEV ?
     null
 ;
 
-const getPassword = require("./get_password")(config);
+let getPassword = null; 
 
 
 
 
 exports.generatePassword = async (req, res)=>{
     const method = req.method || "GET";
+
+    if(null == getPassword){
+        getPassword = await require("./get_password")(config);
+    }
 
     if(method == "GET"){
         res.status(200).send(TEMPLATE);
@@ -44,6 +49,10 @@ exports.generatePassword = async (req, res)=>{
           body_pin     = _.get(req, "body.pin"),
           body_otp     = _.get(req, "body.otp");
     
+    let otp_verification = await verify_yubico_otp(body_otp);
+    if(_.get(otp_verification, "success") !== true){
+        res.status(400).send("Bad OTP");
+    }
 
     const result_buffer = await getPassword(Buffer.from(body_request, "ascii"));
 
