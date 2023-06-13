@@ -1,5 +1,18 @@
 const _ = require("lodash");
+const crypto = require("crypto");
 const kms = require('@google-cloud/kms');
+
+
+
+function sha512(input){
+    const hash = crypto.createHash('sha512');
+    hash.update(input);
+    return hash.digest();
+}
+
+
+
+
 
 module.exports = async (config)=>{
 
@@ -41,7 +54,7 @@ module.exports = async (config)=>{
     return async function sign(data){
         const [signResponse] = await client.macSign({
             name: newestVersionName,
-            data
+            data: sha512(data),
         });
         return signResponse.mac;
     }

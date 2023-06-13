@@ -41,7 +41,16 @@ function yubikey_otp_to_serial(otp){
 }
 
 
-
+function preverify_otp(otp){
+    if(!/^[cbdefghijklnrtuv]{44}$/.test(otp)){
+        return false;
+    }
+    const sn = yubikey_otp_to_serial(otp).toString();
+    if(ALLOWED_USERS.indexOf(sn)>=0){
+        return sn;
+    }
+    return false;
+}
 
 
 
@@ -60,9 +69,17 @@ module.exports = async (otp)=>{
         });
     });
 
+    const sn = preverify_otp(otp);
+    if(false === sn){
+        return {
+            success: false
+        }
+    }
+
     const nonce_hex = nonce.toString("hex");
-    const endpoint = `https://api.yubico.com/wsapi/2.0/verify?id=1&otp=${otp}&nonce=${nonce_hex}`;
-    
+    const endpoint_i = Math.floor(Math.random() * 5) + 1;
+    const endpoint = `https://api${endpoint_i>=2?endpoint_i:''}.yubico.com/wsapi/2.0/verify?id=1&otp=${otp}&nonce=${nonce_hex}`;
+
     const res = await fetch(endpoint);
     const result = await res.text();
     
@@ -73,10 +90,8 @@ module.exports = async (otp)=>{
         return false;
     }
 
-    const sn = yubikey_otp_to_serial(otp).toString();
-
     return {
-        success: result.indexOf("status=OK") >= 0 && ALLOWED_USERS.indexOf(sn)>=0,
+        success: result.indexOf("status=OK") >= 0,
         serial: yubikey_otp_to_serial(otp),
         allowed: ALLOWED_USERS.indexOf(sn)>=0,
     };

@@ -1,4 +1,5 @@
 const _ = require("lodash");
+
 const verify_yubico_otp = require("./verify_yubico_otp");
 const TEMPLATE = `
 <!DOCTYPE html>
@@ -34,6 +35,9 @@ let getPassword = null;
 
 
 exports.generatePassword = async (req, res)=>{
+    res.set('Access-Control-Allow-Origin', "*")
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
+
     const method = req.method || "GET";
 
     if(null == getPassword){
@@ -45,14 +49,28 @@ exports.generatePassword = async (req, res)=>{
         return;
     }
 
-    const body_request = _.get(req, "body.request"),
-          body_pin     = _.get(req, "body.pin"),
-          body_otp     = _.get(req, "body.otp");
+    let body_request = _.get(req, "body.request"),
+        body_pin     = _.get(req, "body.pin"),
+        body_otp     = _.get(req, "body.otp");
+
+    if(!_.isString(body_request)){
+        return res.status(400).send("Bad request");
+    }
+
+    body_request = body_request.trim();
+    if(!/^[\x20-\x7E]+$/.test(body_request)){
+        return res.status(400).send("Bad request with non-ASCII chars.");
+    }
     
-    let otp_verification = await verify_yubico_otp(body_otp);
+    let otp_verification = null;
+    try{
+        otp_verification = await verify_yubico_otp(body_otp);
+    } catch(e){
+        return res.status(500).send("OTP verification failed.");
+    }
+
     if(_.get(otp_verification, "success") !== true){
-        res.status(400).send("Bad OTP.");
-        return;
+        return res.status(400).send("Bad OTP.");
     }
 
     const result_buffer = await getPassword(Buffer.from(body_request, "ascii"));
