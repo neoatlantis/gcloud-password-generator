@@ -57,9 +57,9 @@ exports.generatePassword = async (req, res)=>{
         return res.status(400).send("Bad request");
     }
 
-    body_request = body_request.trim();
-    if(!/^[\x20-\x7E]+$/.test(body_request)){
-        return res.status(400).send("Bad request with non-ASCII chars.");
+    body_request = body_request.trim().toLowerCase();
+    if(!/^[0-9a-f]{128}$/.test(body_request)){
+        return res.status(400).send("Bad request format.");
     }
     
     let otp_verification = null;
